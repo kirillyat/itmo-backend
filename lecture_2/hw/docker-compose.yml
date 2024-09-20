@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  asgi-service:
+    image: asgi-app:latest # Название вашего образа
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080' # Порт на котором запущено приложение
+    restart: always
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090 # Порт Prometheus
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - '3000:3000' # Порт для Grafana
+    restart: always
+
+volumes:
+  grafana-storage:
