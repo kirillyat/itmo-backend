@@ -17,7 +17,9 @@
 2. Запустите сервер командой `uvicorn main:app --host 127.0.0.1 --port 8000`
 3. чтобы отправить запрос на расчет факториала от числа (например 5), выполните `curl --request GET \
   --url 'http://localhost:8000/factorial?n=5'`
-4. чтобы отправить запрос на расчет среднего от n-чисел (например 5-и), выполните `curl --request GET \
-  --url 'http://localhost:8000/mean?n=5'`
+4. чтобы отправить запрос на расчет среднего , выполните `curl -G "http://localhost:8000/mean" --data-urlencode "data=4" --data-urlen
+code "data=2" --data-urlencode "data=8"
+{"resudlt": 4.666666666666667}%                                                 ➜  ~
+`
 5. чтобы отправить запрос на расчет фиббоначи от числа (например 5), выполните `curl --request GET \
   --url 'http://localhost:8000/fibonacci?n=5'`
