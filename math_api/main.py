@@ -19,7 +19,7 @@ async def app(scope, receive, send):
     elif path == "/mean" and method == "GET":
         response_data, status_code = await mean(queries)
     else:
-        response_data, status_code = "Not Found", 404
+        response_data, status_code = json.dumps({"error": "Not Found"}), 404
 
     await send_response(send, response_data, status=status_code)
 
@@ -30,9 +30,9 @@ async def factorial(queries: Dict[str, List[str]]):
         if n is None or n < 0:
             raise ValueError("n must be a non-negative integer")
         result = math.factorial(n)
-        return f"{result}", 200
+        return json.dumps({"result": result}), 200
     except (ValueError, TypeError):
-        return "Invalid input", 400
+        return json.dumps({"error": "Invalid input"}), 400
 
 
 async def fibonacci(queries: Dict[str, List[str]]):
@@ -48,29 +48,33 @@ async def fibonacci(queries: Dict[str, List[str]]):
             return a
 
         result = _fibonacci(n)
-        return f"{result}", 200
+        return json.dumps({"result": result}), 200
     except (ValueError, TypeError):
-        return "Invalid input", 400
+        return json.dumps({"error": "Invalid input"}), 400
 
 
 async def mean(queries: Dict[str, List[str]]):
     try:
-        n = int(queries.get("n", [None])[0])
-        if n < 0:
-            raise ValueError("n must be a non-negative integer")
-        elif n == 0:
-            return "0", 200
-        mean_value = sum(x for x in range(n + 1)) / n
-        return f"{mean_value}", 200
-    except (ValueError, KeyError, json.JSONDecodeError):
-        return "Invalid input", 400
+        data = queries.get("data", [])
+        if not data:
+            raise ValueError("data must be a non-empty list")
+
+        numbers = list(map(float, data))
+
+        if not numbers:
+            return json.dumps({"result": 0}), 200
+            
+        mean_value = sum(numbers) / len(numbers)
+        return json.dumps({"result": mean_value}), 200
+    except (ValueError, TypeError):
+        return json.dumps({"error": "Invalid input"}), 400
 
 
 async def send_response(send, data, status=200):
     headers = {
         "type": "http.response.start",
         "status": status,
-        "headers": [(b"content-type", b"text/plain; charset=utf-8")],
+        "headers": [(b"content-type", b"application/json; charset=utf-8")],
     }
     body = {"type": "http.response.body", "body": data.encode()}
     await send(headers)
