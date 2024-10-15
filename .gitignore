@@ -1,3 +1,14 @@
+# Ignore Mac OS files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore Spotlight search indexes
+.metadata_never_index
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
