@@ -26,7 +26,7 @@ class ItemResponse(ItemBase):
     deleted: bool = False
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class CartItem(BaseModel):
