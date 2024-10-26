@@ -26,7 +26,7 @@ class ItemResponse(ItemBase):
     deleted: bool = False
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CartItem(BaseModel):
@@ -135,7 +135,9 @@ async def replace_item(id: int, item_update: ItemUpdate):
     if item_update.price is None or item_update.name is None:
         raise HTTPException(status_code=422, detail="Both name and price are required")
 
-    updated_item = existing_item.copy(update=item_update.dict(exclude_unset=True))
+    updated_item = existing_item.model_copy(
+        update=item_update.model_dump(exclude_unset=True)
+    )
     items_db[id] = updated_item
     return updated_item
 
