@@ -1,5 +1,3 @@
-from typing import List, Dict
-from urllib.parse import parse_qs
 import math
 import json
 from urllib.parse import parse_qs
@@ -27,7 +25,7 @@ async def app(scope, receive, send):
                     raise ValueError("n must be a non-negative integer")
             except ValueError:
                 response_data = json.dumps({"error": "Invalid n value"})
-                status_code = 400
+                status_code = 422
             except Exception:
                 response_data = json.dumps({"error": "No valid n value provided"})
                 status_code = 422
@@ -35,27 +33,29 @@ async def app(scope, receive, send):
             response_data = json.dumps({"error": "No n parameter given"})
             status_code = 422
 
-    # Handling fibonacci query
     elif path.startswith("/fibonacci") and method == "GET":
         try:
             split_path = path.split("/")
-            n = int(split_path[-1])  # Extract n from path like /fibonacci/5
+            n = int(split_path[-1])
 
             if n >= 0:
                 result = fibonacci(n)
                 response_data = json.dumps({"result": result})
                 status_code = 200
             else:
-                raise ValueError("n must be non-negative")
-        except (ValueError, IndexError):
-            response_data = json.dumps({"error": "Invalid Fibonacci sequence number"})
+                raise ValueError("n must be a non-negative integer")
+        except ValueError:
+            response_data = json.dumps({"error": "Invalid Fibonacci number"})
             status_code = 422
+        except IndexError:
+            response_data = json.dumps({"error": "No number provided for Fibonacci"})
+            status_code = 404
 
     # Handling mean query
     elif path == "/mean" and method == "GET":
         body = await read_body(receive)
         try:
-            data = json.loads(body)  # Expecting body in JSON format
+            data = json.loads(body)  # We expect the body to contain a JSON list
             if not isinstance(data, list) or not all(
                 isinstance(item, (int, float)) for item in data
             ):
@@ -81,10 +81,11 @@ async def app(scope, receive, send):
     await send_response(send, response_data, status=status_code)
 
 
-# Fibonacci function
 def fibonacci(n):
-    if n <= 1:
-        return n
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
     else:
         a, b = 0, 1
         for _ in range(2, n + 1):
@@ -92,13 +93,16 @@ def fibonacci(n):
         return b
 
 
+# Function to read the entire request body, expected for `/mean`
 async def read_body(receive):
     body = b""
-    while True:
+    more_body = True
+
+    while more_body:
         message = await receive()
         body += message.get("body", b"")
-        if not message.get("more_body"):
-            break
+        more_body = message.get("more_body", False)
+
     return body.decode("utf-8")
 
 
@@ -107,7 +111,7 @@ async def send_response(send, data, status=200):
         {
             "type": "http.response.start",
             "status": status,
-            "headers": [(b"content-type", b"application/json; charset=utf-8")],
+            "headers": [(b"content-type", b"application/json")],
         }
     )
     await send(
